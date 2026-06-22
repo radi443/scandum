@@ -1,29 +1,36 @@
 package blit
 
 import "base:intrinsics"
-import "core:fmt"
+// import "base:intrinsics"
+// import "core:slice"
+// import "core:fmt"
 cmp_t :: int
 
+// custom :: proc(args: ..any){}
+/*
+// custom(
+fmt.println(
+*/
 quadsort_swap :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
     if len(arr) <= 96 {
         tail_swap(arr, swap, greater)
     } else if !quad_swap(arr, swap, greater) {
-
         block := quad_merge(arr, swap, 32, greater)
         rotate_merge(arr, swap, block, greater)
     }
 }
 
+// analyse the array and make len 32 sorted runs. ordered, reversed terminates early
 quad_swap :: proc(arr, swap: $A, greater: proc($T,T)->bool) -> bool {
-    cur_function = "wuad swa"
-       fmt.println("wuad swap")
+       // custom("quad_swap BEFORE:", arr)
+       
     x, v1, v2, v3, v4 : cmp_t
     pta, pts : int
     State :: enum {Neutral, Ordered, Reversed}
     state := State.Neutral
     count := len(arr) / 8
     outer: for ;count > 0; count -= 1 {
-
+        // custom(state)
         switch state {
             case .Neutral:        
                 v1 = cast(cmp_t)greater(arr[pta + 0],arr[pta + 1])
@@ -119,7 +126,7 @@ quad_swap :: proc(arr, swap: $A, greater: proc($T,T)->bool) -> bool {
                             continue outer
                     }
                 }
-                quad_reversal(arr[pts:pta-1])
+                quad_reversal(arr[pts:pta-0])
 
                 if v == 4 &&
                     !greater(arr[pta + 1],arr[pta + 2]) &&
@@ -172,10 +179,13 @@ quad_swap :: proc(arr, swap: $A, greater: proc($T,T)->bool) -> bool {
                 break swit
         }
 
-        quad_reversal(arr[pts:pta - 1]) // off by one maybe
+        quad_reversal(arr[pts:pta - 0]) // off by one maybe
+    } else {
     }
+        tail_swap(arr[pta:], swap, greater)
 
-    tail_swap(arr[pta:], swap, greater)
+    // // custom("reverse_end",arr[pta:])
+    
 
     pta = 0
 
@@ -190,22 +200,25 @@ quad_swap :: proc(arr, swap: $A, greater: proc($T,T)->bool) -> bool {
         parity_merge(swap, arr[pta:], 8, 8, greater)
         parity_merge(swap[16:], arr[16+pta:], 8, 8, greater)
         parity_merge(arr[pta:], swap, 16, 16, greater)
-
+        is_sorted(arr[pta:][:32])
         pta += 32
     }
     if len(arr) % 32 > 8 {
+        // // custom("len %32 > 8, wuad_swap")
         tail_merge(arr[pta:], swap, 8, greater)
     }
-
+ // custom("quad_swap AFTER:", arr)
     return false
 }
 
-// lgtm
+// take blocks and turn them into bigger blocks
 quad_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)-> bool) -> int{    
-        fmt.println("wuad merge")
-        cur_function = "wuad merge"
+        // // custom("wuad merge",arr)
+            // custom("quad_merge BEFORE:",arr)
+        // custom("quad_merge AFTER:",arr)
+
     block := block * 4
-    for block < len(arr) && block < len(swap) {
+    for block <= len(arr) && block <= len(swap) {
         pta := 0
         for {
             quad_merge_block(arr[pta:], swap, block / 4,  greater)
@@ -217,16 +230,17 @@ quad_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)-> bool) -> int
         block *= 4
     }
     tail_merge(arr, swap, block / 4, greater)
+    // custom("quad_merge AFTER:",arr)
     return block / 2
 }
 
 rotate_merge ::  proc(arr, swap: $A, block: int, greater: proc($T,T)-> bool){
-        fmt.println("rotate block")
-        cur_function = "rotate block"
+        // custom("rotate merge BEFORE:", arr)
     pte := len(arr)
     block := block
 
     if len(arr) <= block * 2 && len(arr) - block <= len(swap) {
+                // custom("rotate merge early")
         partial_backwards_merge(arr, swap, block, greater)
         return
     }
@@ -234,35 +248,38 @@ rotate_merge ::  proc(arr, swap: $A, block: int, greater: proc($T,T)-> bool){
         for pta := 0; pta + block < pte; pta += block * 2 {
             if pta + block * 2 < pte {
                 rotate_merge_block(arr[pta:][:2*block], swap, block ,greater)
+                // custom("rotate merge continue")
                 continue
             }
-            rotate_merge_block(arr[pta:][:pte - pta], swap, block, greater)
+            // custom("rotate merge end")
+            rotate_merge_block(arr[pta:], swap, block, greater)
             break
         }
         block *= 2
     }
+         // custom("rotate merge AFTER:", arr)
 }
 
-// lgtm
+// merges 4 blocks into 1
 quad_merge_block :: proc(arr, swap: $A, block: int, greater: proc($T,T)-> bool){
-        fmt.println("quad meger block")
-        cur_function = "quad meger block"
+    // test := slice.clone(arr[:block])        
+    // custom("quad_merge_block BEFORE:", arr)
     blockx2 := block * 2
     pt1 := block
     pt2 := block * 2
     pt3 := block * 3
-    cmp12 := cast(cmp_t)greater(arr[pt1 - 1], arr[pt1])
-    cmp34 := cast(cmp_t)greater(arr[pt3 - 1], arr[pt3])
+    cmp12 := cast(cmp_t)!greater(arr[pt1 - 1], arr[pt1])
+    cmp34 := cast(cmp_t)!greater(arr[pt3 - 1], arr[pt3])
     switch cmp12 + cmp34 * 2 {
         case 0:
             cross_merge(swap, arr, block, block, greater)
             cross_merge(swap[pt2:], arr[pt2:], block, block, greater)
         case 1:
             quad_copy(swap, arr[:blockx2])
-            cross_merge(swap[pt2:], arr[pt2:], block, block, greater)
+            cross_merge(swap[blockx2:], arr[pt2:], block, block, greater)
         case 2:
             cross_merge(swap, arr, block, block, greater)
-            quad_copy(swap[pt2:], arr[pt2:][:blockx2])
+            quad_copy(swap[blockx2:], arr[pt2:][:blockx2])
         case 3:
             if !greater(arr[pt2 - 1], arr[pt2]) {
                 return
@@ -270,35 +287,43 @@ quad_merge_block :: proc(arr, swap: $A, block: int, greater: proc($T,T)-> bool){
             quad_copy(swap, arr[:block * 4])
     }
     cross_merge(arr, swap, blockx2, blockx2, greater)
+
+    // custom("quad_merge_block AFTER:", arr)
 }
 
 // lgtm
 tail_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)-> bool) {
-       fmt.println("rail merge")
-       
-        cur_function = "rail merg"
+       // custom("tail_merge BEFORE:",arr)
+        //    defer is_sorted_assert(arr)
+        //     copy := slice.clone(arr)
+        // defer delete(copy)
     n := len(arr)
     pte := n
     block := block
     for block < n && block <= len(swap) {
         for pta := 0; pta + block < pte; pta += block * 2 {
             if pta + block * 2 < pte {
-
+                // custom("tail merge inblock")
                 partial_backwards_merge(arr[pta:][:block * 2],swap, block, greater)
                 continue
             }
 
+                // custom("tail merge end block")
             partial_backwards_merge(arr[pta:],swap, block, greater)
             break
         }
         block *= 2
     }
+        // custom("tail_merge AFTER:",arr)
+    //  is_sorted_assert("tail merge",arr[:block/2],copy[:block/2])
 }
 
 partial_forward_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)-> bool ) {
-       fmt.println("partail forawrds")
+       // custom("partail forawrds BEFORE:", arr)
+        //    defer is_sorted_assert(arr)
+        // copy := slice.clone(arr)
+        // defer delete(copy)
        
-        cur_function = "partial forawrds"
     // drawing = true
     arr := arr; swap := swap
     if len(arr) == block {
@@ -324,12 +349,12 @@ partial_forward_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)-> b
     // if tpl > 1 && ptr > 1 {
     if ptl < tpl - 1 && ptr < tpr - 1 {
     outer2: for {
-        draw_values(pta,ptr,ptl)
+        // draw_values(pta,ptr,ptl)
         if left {
             for greater(swap[ptl], arr[ptr + 1]) {
                 arr[pta] = arr[ptr]; pta += 1; ptr += 1
                 arr[pta] = arr[ptr]; pta += 1; ptr += 1
-        draw_values(pta,ptr,ptl)
+        // draw_values(pta,ptr,ptl)
                 if ptr >= tpr - 1 {break outer2}
             }
 
@@ -344,7 +369,7 @@ partial_forward_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)-> b
             for !greater(swap[ptl + 1], arr[ptr]) {
                 arr[pta] = swap[ptl]; pta += 1; ptl += 1
                 arr[pta] = swap[ptl]; pta += 1; ptl += 1
-        draw_values(pta,ptr,ptl)
+        // draw_values(pta,ptr,ptl)
                 if ptl >= tpl - 1 {break outer2}
             }
 
@@ -364,35 +389,36 @@ partial_forward_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)-> b
         pta += 2
         arr[pta] = !greater(swap[ptl],arr[ptr]) ? pp(swap, &ptl, T) : pp(arr, &ptr, T); pta += 1
     
-        if ptl >= tpl - 1 && ptr >= tpr - 1 {
+        if ptl >= tpl - 1 || ptr >= tpr - 1 {
             break
         }
     }
     }
     
     for ptl <= tpl && ptr <= tpr {
-        arr[pta] = !greater(arr[ptl], arr[ptr]) ? pp(arr, &ptl, T) : pp(arr, &ptr, T); pta += 1
+        arr[pta] = !greater(swap[ptl], arr[ptr]) ? pp(swap, &ptl, T) : pp(arr, &ptr, T); pta += 1
     }
     for ptl <= tpl {
         arr[pta] = swap[ptl]
         ptl += 1
         pta += 1
     }
+    // // custom(arr)
+    // is_sorted_assert("partial froward",arr, copy)
+     // custom("partail forawrds AFTER:", arr)
 }
 
 // maybe
 drawing := false
 partial_backwards_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)-> bool ) {
     // drawing = true
-        fmt.println("partial backwards")
-        cur_function = "partial backwards"
+        //    defer is_sorted_assert(arr)
+        // custom("partial backwards BEFORE:", arr)
+        // copy := slice.clone(arr)
+        // defer delete(copy)
+
     arr := arr; swap := swap
     if len(arr) <= block {
-        if len(arr) < block {
-            fmt.println("arr bigger", arr, swap, block)
-        } else {
-            fmt.println("arr equal", arr, swap, block)
-        }
         return
     } 
 
@@ -403,12 +429,15 @@ partial_backwards_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)->
     loop : int
 
     if !greater(arr[tpl],arr[tpl+1]) {
+        // // custom("partial backwards early return",arr[tpl],arr[tpl+1], block)
+        // is_sorted_assert("partial backwards early return",arr,arr[tpl],arr[tpl+1], block,len(arr))
         return
     }
 
     right := len(arr) - block
 
     if len(arr) <= len(swap) && right >= 64 {
+        // custom("partial backwards early cross")
         cross_merge(swap, arr, block, right, greater) // TODO
         quad_copy(arr,swap)
         return
@@ -509,6 +538,7 @@ partial_backwards_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)->
     }
     
     for tpr >= 0 && tpl >= 0 {
+
         arr[tpa] = greater(arr[tpl],swap[tpr]) ? nn(arr, &tpl, T) : nn(swap, &tpr, T); tpa -= 1
     }
     for tpr >= 0 {
@@ -516,10 +546,13 @@ partial_backwards_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)->
         tpr -= 1
         tpa -= 1
     }
+    // is_sorted_assert("partial backwards",arr,copy[block:],copy[:block],block)
+     // custom("partial backwards AFTER:", arr)
 }
 cross_merge :: proc(dest, from: $A, left, right: int, greater: proc($T,T)-> bool){
-    cur_function = "cross_mere"
-        fmt.println("cross_mere")
+        // custom("cross_merge BEFORE:", dest)
+        //    defer is_sorted_assert(dest[:left+right])
+        // // custom("cross_mere")
     dest := dest; from := from
     // from
     ptl := 0
@@ -527,7 +560,7 @@ cross_merge :: proc(dest, from: $A, left, right: int, greater: proc($T,T)-> bool
     tpl := ptr - 1
     tpr := tpl + right
 
-    if left + 1 >= right && right >= left && left >= 32 {
+    if left + 1 >= right && right >= left && left >= 32 && true {
         if greater(from[ptl + 15], from[ptr]) &&
             !greater(from[ptl], from[ptr + 15]) &&
             greater(from[tpl],from[tpr - 15]) && 
@@ -596,12 +629,15 @@ cross_merge :: proc(dest, from: $A, left, right: int, greater: proc($T,T)-> bool
         ptr += 1
     }
 
+    // is_sorted_assert("cross merge",dest[:left+right], from)
+     // custom("cross_merge AFTER:", dest)
 }
 
 // takes two sorted arrays with max left 1 smaller
 parity_merge :: proc(dest, from: $A, left, right: int, greater: proc($T,T)-> bool){
-    cur_function = "parity_merge"
-        fmt.println("parity_merge")
+
+        // custom("parity_merge BEFORE:", dest)
+        // // custom("parity_merge BEFORE:: ",arr)
     dest := dest; from := from
     
     ptl := 0
@@ -622,11 +658,13 @@ parity_merge :: proc(dest, from: $A, left, right: int, greater: proc($T,T)-> boo
     }
     
     dest[tpd] = greater(from[tpl],from[tpr]) ? from[tpl] : from[tpr]
+     // custom("parity_merge AFTER:", dest)
+    // is_sorted_assert(dest[:left+right])
 }
 
 tail_swap :: proc(arr, swap: $A, greater: proc($T,T)-> bool) {
-    cur_function = "taiul_swap"
-        fmt.println("taiul_swap!")
+        //    defer is_sorted_assert(arr)
+        // custom("taiul_swap BEFORE:", arr)
     if len(arr) < 8 {
         tiny_sort(arr,swap,greater)
         return
@@ -652,12 +690,12 @@ tail_swap :: proc(arr, swap: $A, greater: proc($T,T)-> bool) {
     parity_merge(swap, arr, quad1, quad2, greater)
     parity_merge(swap[half1:], arr[half1:],quad3, quad4, greater)
     parity_merge(arr,swap, half1, half2, greater)
+     // custom("taiul_swap AFTER:", arr)
 }
 
 quad_reversal :: proc(arr: $A){
-    cur_function = "reverse"
-        fmt.println("reverse")
-    assert(len(arr) > 2)
+        // custom("reverse")
+    // assert(len(arr) > 2)
     arr := arr
 
     pta := 0
@@ -875,8 +913,7 @@ nn :: #force_inline proc(arr: $A, pointer: ^int, $T: typeid) -> T #no_bounds_che
 
 // lgtm
 trinity_rotation :: proc(arr, swap: $A, left: int){
-    cur_function = "rotation"
-        fmt.println("rotation")
+        // // custom("rotation")
     bridge : int
     right := len(arr) - left
     left := left
@@ -1027,9 +1064,12 @@ trinity_rotation :: proc(arr, swap: $A, left: int){
 }
 
 // lgtm
-mono_bound_binary_first :: proc(arr: $A, val: $T, greater: proc(T,T) -> bool) -> int{
-    cur_function = "binsearch"
-        fmt.println("binsearch")
+mono_bound_binary_first :: proc(arr: $A, val: $T, greater: proc(T,T) -> bool) -> int #no_bounds_check {
+        //    if !is_sorted(arr) {
+        //     // custom("binary searching a not sorted array", arr)
+        //     panic("not sorted array")
+        //    } 
+        // // custom("binsearch")
     end := len(arr) - 1
     top := len(arr)
 
@@ -1041,16 +1081,51 @@ mono_bound_binary_first :: proc(arr: $A, val: $T, greater: proc(T,T) -> bool) ->
         }
         top -= mid
     }
-    if !greater(val,arr[end - 1]){
-        end -= 1
-    }
+    // if end == 0 {
+    //     // custom("bin search early 0")
+    //     return -1
+    // }
+    #no_bounds_check {
+        if !greater(val,arr[end - 1]){
+            end -= 1
+        }
+    } 
     return end
 }
+mono_bound_binary_first3 :: proc(arr: $A, left: int, val: $T, greater: proc(T,T) -> bool) -> int{
+        // if !is_sorted(arr[left:]) {
+        //     // custom("binary searching a not sorted array", arr[left:])
+        //     panic("not sorted array")
+        //    } 
+        // custom("binsearch")
+
+    end := len(arr) - 1 - left 
+    top := len(arr) - left
+
+    for top > 1 {
+        mid := top / 2
+
+        if !greater(val, arr[end-mid+left]) {
+            end -= mid
+        }
+        top -= mid
+    }
+        if len(arr) == 1 {return 0}
+    if !greater(val,arr[end - 1+left]){
+        end -= 1
+    }
+    return max(0,end)
+}
+
+
+
 
 // idk
 rotate_merge_block :: proc(arr, swap: $A, lblock: int, greater: proc($T,T) -> bool){
-    cur_function = "rotate_mege_block"
-    fmt.println("rotate_mege_block")
+        //    defer is_sorted_assert(arr)
+        // custom("rotate_merge_block BEFORE:", arr)
+    // copy := slice.clone(arr)
+        // defer delete(copy)
     if !greater(arr[lblock - 1], arr[lblock]) {
         return
     }
@@ -1062,7 +1137,10 @@ rotate_merge_block :: proc(arr, swap: $A, lblock: int, greater: proc($T,T) -> bo
     // swap rblock with left until they can be merged
     // [ lblock ] [ rblock ] [ left ] [ right ]
     left := mono_bound_binary_first(arr[lblock + rblock:], arr[lblock], greater)
+    // left := mono_bound_binary_first2(arr[lblock + rblock:], arr[lblock], greater)
 
+    // left := mono_bound_binary_first2(arr, lblock + rblock, arr[lblock], greater)
+    // custom(arr[lblock],arr[lblock+rblock:],left)
 
     right := len(arr) - left - rblock - lblock 
 
@@ -1096,11 +1174,11 @@ rotate_merge_block :: proc(arr, swap: $A, lblock: int, greater: proc($T,T) -> bo
             rotate_merge_block(arr[lblock + left:], swap, rblock, greater)
         }
     }
+    // is_sorted_assert("end rotate mege block",arr,copy,lblock,rblock,left,right)
+     // custom("rotate_merge_blocke AFTER:", arr)
 }
 
 quad_copy :: proc(arr, swap: $A){
-    cur_function = "wuad copy"
-    fmt.println("wuad copy")
     when intrinsics.type_is_slice(A) {
         copy(arr, swap)
     } else {
@@ -1111,3 +1189,8 @@ quad_copy :: proc(arr, swap: $A){
         }
     }
 }
+// quad_copy :: proc(arr, swap: $A){
+
+//         copy(arr, swap)
+
+// }
