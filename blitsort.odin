@@ -2,13 +2,15 @@ package blit
 
 import "core:fmt"
 import "base:intrinsics"
+// import "core:fmt"
+// import "base:intrinsics"
 
 BLIT_AUX :: 128
 BLIT_OUT :: 32
 
 //looks goood
 blit_analyze :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
-        fmt.println("blit analyse")
+        // fmt.println("blit analyse")
         
     arr := arr; swap := swap
     abalance, bbalance, cbalance, dbalance : int
@@ -27,7 +29,7 @@ blit_analyze :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
 
     for cnt = len(arr); cnt > 132; cnt -= 128 {
         asum, bsum, csum, dsum = 0,0,0,0
-        for loop := 32; loop > 0; loop -= 1 {
+        for _ in 0..<32 {
             asum += cast(int)greater(arr[pta], arr[pta+1]); pta += 1
             bsum += cast(int)greater(arr[ptb], arr[ptb+1]); ptb += 1
             csum += cast(int)greater(arr[ptc], arr[ptc+1]); ptc += 1
@@ -38,7 +40,7 @@ blit_analyze :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
         cbalance += csum; csum = cast(int)((csum == 0) | (csum == 32)); cstreaks += csum
         dbalance += dsum; dsum = cast(int)((dsum == 0) | (dsum == 32)); dstreaks += dsum
 
-        if cnt > 512 && asum + bsum + csum + dsum == 0 {
+        if cnt > 516 && asum + bsum + csum + dsum == 0 {
             abalance += 48; pta += 96
             bbalance += 48; ptb += 96
             cbalance += 48; ptc += 96
@@ -55,8 +57,8 @@ blit_analyze :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
     }
 
     if quad1 < quad2 {bbalance += cast(int)greater(arr[ptb], arr[ptb + 1]); ptb += 1}
-    if quad2 < quad3 {cbalance += cast(int)greater(arr[ptc], arr[ptc + 1]); ptc += 1}
-    if quad3 < quad4 {dbalance += cast(int)greater(arr[ptd], arr[ptd + 1]); ptd += 1}
+    if quad1 < quad3 {cbalance += cast(int)greater(arr[ptc], arr[ptc + 1]); ptc += 1}
+    if quad1 < quad4 {dbalance += cast(int)greater(arr[ptd], arr[ptd + 1]); ptd += 1}
 
     cnt = abalance + bbalance + cbalance + dbalance
 
@@ -68,31 +70,31 @@ blit_analyze :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
         }
     }
 
-    asum = quad1 - int(abalance == 1)
-    bsum = quad2 - int(bbalance == 1)
-    csum = quad3 - int(cbalance == 1)
-    dsum = quad4 - int(dbalance == 1)
+    asum = int((quad1 - abalance) == 1)
+    bsum = int((quad2 - bbalance) == 1)
+    csum = int((quad3 - cbalance) == 1)
+    dsum = int((quad4 - dbalance) == 1)
 
     if (asum | bsum | csum | dsum) > 0 {
         span1 := int(asum > 0 && bsum > 0) * int(greater(arr[pta], arr[pta+1]))
         span2 := int(bsum > 0 && csum > 0) * int(greater(arr[ptb], arr[ptb+1]))
         span3 := int(csum > 0 && dsum > 0) * int(greater(arr[ptc], arr[ptc+1]))
-
+        fmt.println(span1,span2,span3)
         switch (span1 + span2 * 2 + span3 * 4) {
             case 0:
-            case 1: quad_reversal(arr[:ptb]); abalance, bbalance = 0,0
-            case 2: quad_reversal(arr[pta+1:ptc]); bbalance, cbalance = 0,0
-            case 3: quad_reversal(arr[:ptc]); abalance, bbalance, cbalance = 0,0,0
-            case 4: quad_reversal(arr[ptb+1:ptd]);  cbalance, dbalance = 0,0
-            case 5: quad_reversal(arr[ptb+1:ptd]); quad_reversal(arr[:ptb]); abalance,bbalance, cbalance,dbalance = 0,0,0,0
-            case 6: quad_reversal(arr[pta+1:ptd]); bbalance, cbalance, dbalance = 0,0,0
-            case 7: quad_reversal(arr[:ptd]); 
+            case 1: quad_reversal(arr[:half1]); abalance, bbalance = 0,0
+            case 2: quad_reversal(arr[quad1:][:quad2+quad3]); bbalance, cbalance = 0,0
+            case 3: quad_reversal(arr[:half1+quad3]); abalance, bbalance, cbalance = 0,0,0
+            case 4: quad_reversal(arr[half1:]); cbalance, dbalance = 0,0
+            case 5: quad_reversal(arr[:half1]); quad_reversal(arr[half1:]); abalance,bbalance, cbalance,dbalance = 0,0,0,0
+            case 6: quad_reversal(arr[quad1:]); bbalance, cbalance, dbalance = 0,0,0
+            case 7: quad_reversal(arr); return
         }
 
-        if asum > 0 && abalance > 0 {quad_reversal(arr[:pta]); abalance = 0}
-        if bsum > 0 && bbalance > 0 {quad_reversal(arr[pta + 1:ptb]); bbalance = 0}
-        if csum > 0 && cbalance > 0 {quad_reversal(arr[ptb + 1:ptc]); cbalance = 0}
-        if dsum > 0 && dbalance > 0 {quad_reversal(arr[ptc + 1:ptd]); dbalance = 0}
+        if asum > 0 && abalance > 0 {quad_reversal(arr[:quad1]); abalance = 0}
+        if bsum > 0 && bbalance > 0 {quad_reversal(arr[quad1:][:quad2]); bbalance = 0}
+        if csum > 0 && cbalance > 0 {quad_reversal(arr[half1:][:quad3]); cbalance = 0}
+        if dsum > 0 && dbalance > 0 {quad_reversal(arr[half1+quad3:]); dbalance = 0}
     }
 
     cnt = len(arr) / 256 // TODO: test speed
@@ -103,11 +105,13 @@ blit_analyze :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
     csum = int(cstreaks > cnt)
     dsum = int(dstreaks > cnt)
 
-    drawing = true
+    // drawing = true
     // if quad1 > quad_cache {
     //     asum, bsum,csum,dsum = 1,1,1,1
     // }
-
+drawing = true
+// fmt.println(asum,bsum,csum,dsum)
+// fmt.println(abalance,bbalance,cbalance,dbalance)
     switch asum + bsum << 1 + csum << 2 + dsum << 3 {
         case 0: 
             blit_partition(arr, swap, greater)
@@ -116,7 +120,7 @@ blit_analyze :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
             if abalance > 0  {quadsort_swap(arr[:quad1], swap, greater)}
             blit_partition(arr[quad1:],swap, greater)
         case 2:
-            blit_partition(arr[:quad2],swap, greater)
+            blit_partition(arr[:quad1],swap, greater)
             if bbalance  > 0 {quadsort_swap(arr[quad1:][:quad2], swap, greater)}
             blit_partition(arr[half1:], swap, greater)
         case 3:
@@ -147,10 +151,10 @@ blit_analyze :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
             } else {blit_partition(arr[quad1:][:quad2], swap, greater)}
             if csum > 0 {
                 if cbalance > 0  {quadsort_swap(arr[half1:][:quad3], swap, greater)}
-            } else {blit_partition(arr[quad2:][:quad3], swap, greater)}
+            } else {blit_partition(arr[half1:][:quad3], swap, greater)}
             if dsum > 0 {
                 if dbalance > 0  {quadsort_swap(arr[half1 + quad3:], swap, greater)}
-            } else {blit_partition(arr[quad3:], swap, greater)}
+            } else {blit_partition(arr[half1 + quad3:], swap, greater)}
     }
 
     if !greater(arr[pta], arr[pta+1]) {
@@ -172,7 +176,7 @@ blit_analyze :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
 
 //looks goood
 binary_median :: proc(arr1, arr2: $A, greater: proc($T,T)-> bool)->int{
-        fmt.println("bin median")
+        // fmt.println("bin median")
     arr1 := arr1; arr2 := arr2
     pt1, pt2 : int
     n := len(arr1)
@@ -195,13 +199,13 @@ trim_four :: proc(arr: $A, greater: proc($T,T)-> bool){
     x = cast(int)greater(arr[0], arr[1]); arr[1], arr[0] = arr[1-x], arr[x]
     x = cast(int)greater(arr[2], arr[3]); arr[3], arr[2] = arr[3-x], arr[x+2]
     
-    x = cast(int)!greater(arr[0], arr[2]); arr[2] = arr[x]
-    x = cast(int)greater(arr[1], arr[3]); arr[1] = arr[x+1]
+    x = 2*cast(int)!greater(arr[0], arr[2]); arr[2] = arr[x]
+    x = 2*cast(int)greater(arr[1], arr[3]); arr[1] = arr[x+1]
 }
 
 //looks goood
 median_of_nine :: proc(arr, swap: $A,  greater: proc($T,T)-> bool) -> T {
-        fmt.println("med 9")
+        // fmt.println("med 9")
     arr := arr; swap := swap
 
     pta : int
@@ -219,6 +223,7 @@ median_of_nine :: proc(arr, swap: $A,  greater: proc($T,T)-> bool) -> T {
     swap[3] = swap[8]
 
     trim_four(swap,greater)
+    swap[0] = swap[6]
 
     x := cast(int)greater(swap[0], swap[1])
     y := cast(int)greater(swap[0], swap[2])
@@ -230,7 +235,7 @@ median_of_nine :: proc(arr, swap: $A,  greater: proc($T,T)-> bool) -> T {
 
 // lloks good
 median_of_cbrt :: proc(arr, swap: $A, greater: proc($T,T)-> bool) -> (T, bool) {
-        fmt.println("med croot")
+        // fmt.println("med croot")
     arr := arr; swap := swap
 
     cbrt : int
@@ -271,7 +276,7 @@ reverse_partition :: proc(arr, swap: $A, piv: $T, greater: proc(T,T)-> bool) -> 
     arr := arr; swap := swap
 
     if len(arr) > len(swap) {
-        fmt.println("reverse partition base case")
+        // fmt.println("reverse partition base case")
         half := len(arr) / 2
         l := reverse_partition(arr[:half], swap, piv, greater)
         r := reverse_partition(arr[half:], swap, piv, greater)
@@ -280,13 +285,13 @@ reverse_partition :: proc(arr, swap: $A, piv: $T, greater: proc(T,T)-> bool) -> 
 
         return l + r
     }
-        fmt.println("reverse partition recusion")
+        // fmt.println("reverse partition recusion")
 
     pta := 0
     m := 0
     val : int
     for cnt := len(arr) / 4; cnt > 0; cnt -= 1 {
-        fmt.println(piv, arr[pta],arr[pta-m],arr[m])
+        // fmt.println(piv, arr[pta],arr[pta-m],arr[m])
         val = cast(int)greater(piv, arr[pta]); swap[pta-m], arr[m] = arr[pta], arr[pta]; pta += 1; m += val
         val = cast(int)greater(piv, arr[pta]); swap[pta-m], arr[m] = arr[pta], arr[pta]; pta += 1; m += val
         val = cast(int)greater(piv, arr[pta]); swap[pta-m], arr[m] = arr[pta], arr[pta]; pta += 1; m += val
@@ -301,7 +306,7 @@ reverse_partition :: proc(arr, swap: $A, piv: $T, greater: proc(T,T)-> bool) -> 
 }
 
 default_partition :: proc(arr, swap: $A, piv: $T, greater: proc(T,T)-> bool) -> int{
-        fmt.println("default partition")
+        // fmt.println("default partition")
     arr := arr; swap := swap
 
     if len(arr) > len(swap) {
@@ -332,7 +337,7 @@ default_partition :: proc(arr, swap: $A, piv: $T, greater: proc(T,T)-> bool) -> 
 }
 
 blit_partition :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
-        fmt.println("blit partition")
+        // fmt.println("blit partition")
     arr := arr; swap := swap
     n := len(arr)
 
@@ -341,16 +346,17 @@ blit_partition :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
     generic : bool
     for {
         if n <= 2048 {
-            piv = median_of_nine(arr,swap,greater)
+            piv = median_of_nine(arr[:n], swap, greater)
         } else {
-            piv, generic = median_of_cbrt(arr,swap,greater)
+            piv, generic = median_of_cbrt(arr[:n], swap, greater)
             if generic {
-                quadsort_swap(arr, swap, greater)
+                quadsort_swap(arr[:n], swap, greater)
+                return
             }
         }
 
         if a_size > 0 && !greater(max, piv) {
-            a_size = reverse_partition(arr, swap, piv, greater)
+            a_size = reverse_partition(arr[:n], swap, piv, greater)
             s_size = n - a_size
 
             if s_size <= a_size / 16 || a_size <= BLIT_OUT {
@@ -359,22 +365,27 @@ blit_partition :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
             }
             n = a_size
             a_size = 0
+            continue
         }
-        a_size = default_partition(arr, swap, piv, greater)
+        a_size = default_partition(arr[:n], swap, piv, greater)
         s_size = n - a_size
 
-        if a_size <= a_size / 16 || s_size <= BLIT_OUT {
+        if a_size <= s_size / 16 || s_size <= BLIT_OUT {
             if s_size == 0 {
                 a_size = reverse_partition(arr[:a_size], swap, piv, greater)
                 s_size = n - a_size
 
-                if s_size <= a_size /16 || a_size <= BLIT_OUT {
+                if s_size <= a_size / 16 || a_size <= BLIT_OUT {
                     quadsort_swap(arr[:a_size], swap, greater)
                     return 
                 }
                 n = a_size
                 a_size = 0
+                continue
             }
+            // if s_size < 0 {
+            //     fmt.println(s_size,a_size,arr,arr[a_size:][:s_size])
+            // }
             quadsort_swap(arr[a_size:][:s_size], swap, greater)
         } else {
             blit_partition(arr[a_size:][:s_size], swap, greater)
@@ -414,12 +425,12 @@ blitsort_swap :: proc(arr, swap: $A, greater: proc($T,T)-> bool){
 }
 
 // quad_reversal :: slice.reverse
-
-blit_copy :: proc(arr, swap: $A){
-        fmt.println("blit copy")
-    arr := arr; swap := swap
-    length := min(len(arr),len(swap))
-    for i in 0..<length {
-        arr[i] = swap[i]
-    }
-}
+blit_copy :: quad_copy
+// blit_copy :: proc(arr, swap: $A){
+//         fmt.println("blit copy")
+//     arr := arr; swap := swap
+//     length := min(len(arr),len(swap))
+//     for i in 0..<length {
+//         arr[i] = swap[i]
+//     }
+// }
