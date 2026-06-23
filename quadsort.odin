@@ -500,13 +500,12 @@ partial_backwards_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)->
                 if tpr < 2 {break outer2}
             }
 
-            if greater(arr[tpl - 1], swap[tpr]) {
+            for greater(arr[tpl - 1], swap[tpr]) {
                 arr[tpa] = arr[tpl]; tpa -= 1; tpl -= 1
                 arr[tpa] = arr[tpl]; tpa -= 1; tpl -= 1
                 if tpl < 2 {break outer2}
-                left = false
-                continue outer2
             }
+            left = false
         } else {
             for greater(arr[tpl - 1], swap[tpr]){
                 arr[tpa] = arr[tpl]; tpa -= 1; tpl -= 1
@@ -514,13 +513,12 @@ partial_backwards_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)->
                 if tpl < 2 {break outer2}
             }
 
-            if !greater(arr[tpl], swap[tpr - 1]) {
+            for !greater(arr[tpl], swap[tpr - 1]) {
                 arr[tpa] = swap[tpr]; tpa -= 1; tpr -= 1
                 arr[tpa] = swap[tpr]; tpa -= 1; tpr -= 1
                 if tpr < 2 {break outer2}
-                left = true
-                continue outer2
             }
+            left = true
         }
         x := cast(int)!greater(arr[tpl], swap[tpr])
         tpa -= 1
@@ -538,10 +536,9 @@ partial_backwards_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)->
     }
     
     for tpr >= 0 && tpl >= 0 {
-
         arr[tpa] = greater(arr[tpl],swap[tpr]) ? nn(arr, &tpl, T) : nn(swap, &tpr, T); tpa -= 1
     }
-    for tpr >= 0 {
+    for tpr >= 0 { // copy rest of swap into arr
         arr[tpa] = swap[tpr]
         tpr -= 1
         tpa -= 1
