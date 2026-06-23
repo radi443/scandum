@@ -449,7 +449,7 @@ partial_backwards_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)->
 
     outer: for tpl > 16 && tpr > 16 {
         for !greater(arr[tpl], swap[tpr - 15]) {
-            for _ in 0..<16 {
+            for _ in 0..<16 { // just copy
                 arr[tpa] = swap[tpr]
                 tpa -= 1
                 tpr -= 1
@@ -522,7 +522,7 @@ partial_backwards_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)->
                 continue outer2
             }
         }
-        x := cast(int)(!greater(arr[tpl], swap[tpr]))
+        x := cast(int)!greater(arr[tpl], swap[tpr])
         tpa -= 1
         arr[tpa + x] = swap[tpr]
         tpr -= 1
@@ -1070,53 +1070,24 @@ mono_bound_binary_first :: proc(arr: $A, val: $T, greater: proc(T,T) -> bool) ->
         //     panic("not sorted array")
         //    } 
         // // custom("binsearch")
-    end := len(arr) - 1
-    top := len(arr)
+    end := len(arr) - 1 // TODO check logic
+    length := len(arr)
 
-    for top > 1 {
-        mid := top / 2
+    for length > 1 {
+        mid := length / 2
 
         if !greater(val, arr[end-mid]) {
             end -= mid
         }
-        top -= mid
+        length -= mid
     }
-    // if end == 0 {
-    //     // custom("bin search early 0")
-    //     return -1
-    // }
-    #no_bounds_check {
-        if !greater(val,arr[end - 1]){
-            end -= 1
-        }
-    } 
-    return end
-}
-mono_bound_binary_first3 :: proc(arr: $A, left: int, val: $T, greater: proc(T,T) -> bool) -> int{
-        // if !is_sorted(arr[left:]) {
-        //     // custom("binary searching a not sorted array", arr[left:])
-        //     panic("not sorted array")
-        //    } 
-        // custom("binsearch")
 
-    end := len(arr) - 1 - left 
-    top := len(arr) - left
-
-    for top > 1 {
-        mid := top / 2
-
-        if !greater(val, arr[end-mid+left]) {
-            end -= mid
-        }
-        top -= mid
-    }
-        if len(arr) == 1 {return 0}
-    if !greater(val,arr[end - 1+left]){
+    if !greater(val,arr[end - 1]){
         end -= 1
     }
-    return max(0,end)
+    
+    return end
 }
-
 
 
 
@@ -1142,7 +1113,7 @@ rotate_merge_block :: proc(arr, swap: $A, lblock: int, greater: proc($T,T) -> bo
     // left := mono_bound_binary_first2(arr, lblock + rblock, arr[lblock], greater)
     // custom(arr[lblock],arr[lblock+rblock:],left)
 
-    right := len(arr) - left - rblock - lblock 
+    right := len(arr) - lblock - rblock - left
 
     if left > 0 {
         if lblock + left <= len(swap) {
