@@ -501,11 +501,11 @@ partial_backwards_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)->
             }
 
             if greater(arr[tpl - 1], swap[tpr]) {
+                left = false
                 arr[tpa] = arr[tpl]; tpa -= 1; tpl -= 1
                 arr[tpa] = arr[tpl]; tpa -= 1; tpl -= 1
                 if tpl < 2 {break outer2}
             }
-            left = false
         } else {
             for greater(arr[tpl - 1], swap[tpr]){
                 arr[tpa] = arr[tpl]; tpa -= 1; tpl -= 1
@@ -514,11 +514,11 @@ partial_backwards_merge :: proc(arr, swap: $A, block: int, greater: proc($T,T)->
             }
 
             if !greater(arr[tpl], swap[tpr - 1]) {
+                left = true
                 arr[tpa] = swap[tpr]; tpa -= 1; tpr -= 1
                 arr[tpa] = swap[tpr]; tpa -= 1; tpr -= 1
                 if tpr < 2 {break outer2}
             }
-            left = true
         }
         x := cast(int)!greater(arr[tpl], swap[tpr])
         tpa -= 1
